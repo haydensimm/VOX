@@ -9,22 +9,112 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+Loading packages
+```{r}
+library(tidyverse)
+library(ggplot2)
 ```
 
-## Including Plots
+Creating dataframe
+```{r}
+killi <- read_csv("Data/VOX_Killifish.csv",
+                  locale = locale(encoding = "Windows-1252")) #this is because of the special characters in excel
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+str(killi)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+cleaning names
+```{r}
+library(janitor)
+
+killi <- killi %>%
+  clean_names()
+```
+
+converting predictors to factors
+```{r}
+library(dplyr)
+
+killi <- killi %>%
+  mutate(across(c(acclimation_temperature_c,
+                  acclimation_salinity_ppt,
+                  test_temperature_c),
+                as.factor))
+```
+
+```{r}
+library(lme4)
+library(purrr)
+
+responses <- c(
+  "log_resting_metabolic_rate_mmol_o_g_min",
+  "log_maximal_metabolic_rate_mmol_o_g_min",
+  "log_aerobic_scope_mmol_o_g_min",
+  "log_maximal_cox_activity_mmol_mg_protein_min",
+  "log_maximal_cs_activity_mmol_mg_protein_min",
+  "log_maximal_ldh_activity_mmol_mg_protein_min",
+  "hematocrit_percent"
+)
+
+models <- map(responses, ~ {
+  formula <- as.formula(
+    paste0(.x, " ~ acclimation_temperature_c * acclimation_salinity_ppt * test_temperature_c + (1 | fish_id_number)")
+  )
+  lmer(formula, data = killi_log)
+})
+
+names(models) <- responses
+```
+
+```{r}
+cox_activity <- ggplot(
+  killi,
+  aes(
+    x = Acclimation_Temperature,
+    y = COX_Activity,
+    fill = Assay_Temperature
+  )
+) +
+  geom_boxplot(position = position_dodge(width = 0.8), outlier.shape = NA) +
+  geom_jitter(
+    position = position_jitterdodge(
+      dodge.width = 0.8,
+      jitter.width = 0.2
+    ),
+    alpha = 0.7,
+    size = 2,
+    shape = 21  
+) +
+  scale_fill_manual(
+    values = c(
+      "10" = "#6BAED6",
+      "24" = "#FB6A4A"
+    )
+  ) +
+  theme_classic()+
+  labs(
+    x = "Acclimation Temperature",
+    y = "COX Activity",
+    fill="Assay Temperature"
+  ) +
+   theme(
+     panel.grid = element_blank(),                        
+    axis.title = element_text(size = 12), # axis labels bigger & bold
+    strip.text = element_text(size = 12), # facet labels bigger & bold
+    legend.title = element_text(size = 12))#
+  
+plot(cox_activity)
+```
+
+Saving photo
+```{r}
+
+ggsave(
+  filename = "cox_activity.png",
+  plot = cox_activity,
+  width = 8,    # in inches
+  height = 5,
+  dpi = 300
+)
+```
+
