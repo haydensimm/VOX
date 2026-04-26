@@ -83,6 +83,12 @@ models <- map(responses, ~ {
 names(models) <- responses
 ```
 
+p-values
+```{r}
+
+```
+
+
 Results table
 ```{r}
 library(broom.mixed)
@@ -95,107 +101,3 @@ results <- purrr::map_df(names(models), function(x) {
     dplyr::mutate(response = x)
 })
 ```
-
-builds one plot per response
-```{r}
-make_plot <- function(response_name, models, data) {
-
-  model <- models[[response_name]]
-
-  # pick predictor to test (example: acclimation temperature)
-  emmeans(model, ~ acclimation_temperature_c, type = "response")
-
-  # pairwise comparisons for significance
-  contrasts <- as.data.frame(pairs(emm))
-
-  # convert p-values to stars
-  contrasts <- contrasts %>%
-    mutate(stars = case_when(
-      p.value < 0.001 ~ "***",
-      p.value < 0.01  ~ "**",
-      p.value < 0.05  ~ "*",
-      TRUE ~ "ns"
-    ))
-
-  # base boxplot
-  p <- ggplot(data, aes(
-    x = acclimation_temperature_c,
-    y = .data[[response_name]]
-  )) +
-    geom_boxplot() +
-    theme_classic() +
-    labs(title = response_name, x = "Acclimation Temperature")
-
-  # add simple global significance (if any significant effect exists)
-  if (any(contrasts$p.value < 0.05)) {
-    p <- p + annotate(
-      "text",
-      x = 1.5,
-      y = max(data[[response_name]], na.rm = TRUE),
-      label = "*",
-      size = 6
-    )
-  }
-
-  return(p)
-}
-```
-
-loops for all responses
-```{r}
-plots <- map(responses, ~ make_plot(.x, models, killi))
-names(plots) <- responses
-```
-
-```{r}
-cox_activity <- ggplot(
-  killi,
-  aes(
-    x = Acclimation_Temperature,
-    y = COX_Activity,
-    fill = Assay_Temperature
-  )
-) +
-  geom_boxplot(position = position_dodge(width = 0.8), outlier.shape = NA) +
-  geom_jitter(
-    position = position_jitterdodge(
-      dodge.width = 0.8,
-      jitter.width = 0.2
-    ),
-    alpha = 0.7,
-    size = 2,
-    shape = 21  
-) +
-  scale_fill_manual(
-    values = c(
-      "10" = "#6BAED6",
-      "24" = "#FB6A4A"
-    )
-  ) +
-  theme_classic()+
-  labs(
-    x = "Acclimation Temperature",
-    y = "COX Activity",
-    fill="Assay Temperature"
-  ) +
-   theme(
-     panel.grid = element_blank(),                        
-    axis.title = element_text(size = 12), # axis labels bigger & bold
-    strip.text = element_text(size = 12), # facet labels bigger & bold
-    legend.title = element_text(size = 12))#
-  
-plot(cox_activity)
-```
-
-Saving photo
-```{r}
-
-ggsave(
-  filename = "cox_activity.png",
-  plot = cox_activity,
-  width = 8,    # in inches
-  height = 5,
-  dpi = 300
-)
-```
-
