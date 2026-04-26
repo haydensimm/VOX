@@ -1,0 +1,335 @@
+---
+title: "boxplots"
+author: "Hayden Simm"
+date: "2026-04-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(purrr)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+library(dplyr)
+library(janitor)
+```
+
+Creating dataframe
+```{r}
+killi <- read_csv("../Data/VOX_Killifish.csv",
+                  locale = locale(encoding = "Windows-1252")) #this is because of the special characters in excel
+
+str(killi)
+```
+
+cleaning names
+```{r}
+killi <- killi %>%
+  clean_names()
+```
+
+converting predictors to factors
+```{r}
+killi <- killi %>%
+  mutate(across(c(acclimation_temperature_c,
+                  acclimation_salinity_ppt,
+                  test_temperature_c),
+                as.factor))
+```
+
+RMR
+```{r}
+RMR <- ggplot(
+  killi,
+  aes(
+    x = test_temperature_c,
+    y = resting_metabolic_rate_mmol_o_g_min,
+    color = acclimation_temperature_c
+  )
+) +
+  
+  # Mean points
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    position = position_dodge(width = 0.3),
+    size = 3
+  ) +
+  
+  # Error bars (SE)
+  stat_summary(
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = position_dodge(width = 0.3),
+    width = 0.15
+  ) +
+  
+  # Raw data
+  geom_jitter(
+    aes(fill = acclimation_temperature_c),
+    position = position_jitterdodge(
+      dodge.width = 0.3,
+      jitter.width = 0.15
+    ),
+    alpha = 0.7,
+    size = 2,
+    shape = 21
+  ) +
+  
+  # Match your color palette
+  scale_fill_manual(
+    values = c(
+      "10" = "#6BAED6",
+      "24" = "#FB6A4A"
+    )
+  ) +
+  scale_color_manual(
+    values = c(
+      "10" = "black",
+      "24" = "black"
+    )
+  ) +
+  
+  # Facets (same as your boxplot)
+  facet_wrap(
+    ~ acclimation_salinity_ppt,
+    labeller = labeller(
+      acclimation_salinity_ppt = c(
+        "11" = "Isosmotic (11 ppt)",
+        "28" = "Brackish (28 ppt)"
+      )
+    )
+  ) +
+  
+  # Theme aligned with your original
+  theme_bw() +
+  
+  labs(
+    x = "Test Temperature (°C)",
+    y = "RMR (µmol O₂/g/min)",
+    color = "Acclimation Temperature (°C)",
+    fill = "Acclimation Temperature (°C)"
+  ) +
+  
+  theme(
+    panel.grid = element_blank(),
+    axis.title = element_text(size = 12),
+    strip.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    theme(legend.position = "bottom",
+    legend.box.just = "right")
+  )
+
+plot(RMR)
+```
+
+Saving photo
+```{r}
+ggsave(
+  filename = "../Figures/RMR.png",
+  plot = RMR,
+  width = 8,
+  height = 4,
+  dpi = 300
+)
+```
+
+MMR
+```{r}
+MMR <- ggplot(
+  killi,
+  aes(
+    x = test_temperature_c,
+    y = maximal_metabolic_rate_mmol_o_g_min,
+    color = acclimation_temperature_c
+  )
+) +
+  
+  # Mean points
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    position = position_dodge(width = 0.3),
+    size = 3
+  ) +
+  
+  # Error bars (SE)
+  stat_summary(
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = position_dodge(width = 0.3),
+    width = 0.15
+  ) +
+  
+  # Raw data
+  geom_jitter(
+    aes(fill = acclimation_temperature_c),
+    position = position_jitterdodge(
+      dodge.width = 0.3,
+      jitter.width = 0.15
+    ),
+    alpha = 0.7,
+    size = 2,
+    shape = 21
+  ) +
+  
+  # Match your color palette
+  scale_fill_manual(
+    values = c(
+      "10" = "#6BAED6",
+      "24" = "#FB6A4A"
+    )
+  ) +
+  scale_color_manual(
+    values = c(
+      "10" = "black",
+      "24" = "black"
+    )
+  ) +
+  
+  # Facets (same as your boxplot)
+  facet_wrap(
+    ~ acclimation_salinity_ppt,
+    labeller = labeller(
+      acclimation_salinity_ppt = c(
+        "11" = "Isosmotic (11 ppt)",
+        "28" = "Brackish (28 ppt)"
+      )
+    )
+  ) +
+  
+  # Theme aligned with your original
+  theme_bw() +
+  
+  labs(
+    x = "Test Temperature (°C)",
+    y = "MMR (µmol O₂/g/min)",
+    color = "Acclimation Temperature (°C)",
+    fill = "Acclimation Temperature (°C)"
+  ) +
+  
+  theme(
+    panel.grid = element_blank(),
+    axis.title = element_text(size = 12),
+    strip.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    theme(legend.position = "bottom",
+    legend.box.just = "right")
+  )
+
+plot(MMR)
+```
+
+Saving photo
+```{r}
+ggsave(
+  filename = "../Figures/MMR.png",
+  plot = MMR,
+  width = 8,
+  height = 4,
+  dpi = 300
+)
+```
+
+aerobic scope
+```{r}
+AS <- ggplot(
+  killi,
+  aes(
+    x = test_temperature_c,
+    y = aerobic_scope_mmol_o_g_min,
+    color = acclimation_temperature_c
+  )
+) +
+  
+  # Mean points
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    position = position_dodge(width = 0.3),
+    size = 3
+  ) +
+  
+  # Error bars (SE)
+  stat_summary(
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = position_dodge(width = 0.3),
+    width = 0.15
+  ) +
+  
+  # Raw data
+  geom_jitter(
+    aes(fill = acclimation_temperature_c),
+    position = position_jitterdodge(
+      dodge.width = 0.3,
+      jitter.width = 0.15
+    ),
+    alpha = 0.7,
+    size = 2,
+    shape = 21
+  ) +
+  
+  # Match your color palette
+  scale_fill_manual(
+    values = c(
+      "10" = "#6BAED6",
+      "24" = "#FB6A4A"
+    )
+  ) +
+  scale_color_manual(
+    values = c(
+      "10" = "black",
+      "24" = "black"
+    )
+  ) +
+  
+  # Facets (same as your boxplot)
+  facet_wrap(
+    ~ acclimation_salinity_ppt,
+    labeller = labeller(
+      acclimation_salinity_ppt = c(
+        "11" = "Isosmotic (11 ppt)",
+        "28" = "Brackish (28 ppt)"
+      )
+    )
+  ) +
+  
+  # Theme aligned with your original
+  theme_bw() +
+  
+  labs(
+    x = "Test Temperature (°C)",
+    y = "Aerobic Scope (µmol O₂/g/min)",
+    color = "Acclimation Temperature (°C)",
+    fill = "Acclimation Temperature (°C)"
+  ) +
+  
+  theme(
+    panel.grid = element_blank(),
+    axis.title = element_text(size = 12),
+    strip.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    theme(legend.position = "bottom",
+    legend.box.just = "right")
+  )
+
+plot(AS)
+```
+
+Saving photo
+```{r}
+ggsave(
+  filename = "../Figures/AS.png",
+  plot = AS,
+  width = 8,
+  height = 4,
+  dpi = 300
+)
+```

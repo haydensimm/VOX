@@ -103,7 +103,7 @@ make_plot <- function(response_name, models, data) {
   model <- models[[response_name]]
 
   # pick predictor to test (example: acclimation temperature)
-  emm <- emmeans(model, ~ acclimation_temperature_c)
+  emmeans(model, ~ acclimation_temperature_c, type = "response")
 
   # pairwise comparisons for significance
   contrasts <- as.data.frame(pairs(emm))
