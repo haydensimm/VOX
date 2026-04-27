@@ -36,7 +36,6 @@ zf_transgene <- zf %>%
   filter(transgene_y_n == "Y")
 ```
 
-
 ```{r}
 
 gfp_mean <- zf_transgene %>%
@@ -47,19 +46,190 @@ gfp_mean <- zf_transgene %>%
 ```
 
 ```{r}
-library(tidyr)
-library(dplyr)
 
-zf_long <- gfp_mean %>%
+gfp_saturated <- zf_transgene %>%
+  select(
+    concentration_ug_l,
+    contains("saturated_pixels_pct_gfp_469_525")
+  )
+```
+
+```{r}
+long_mean <- gfp_mean %>%
   pivot_longer(
     cols = starts_with("x"),
     names_to = "day",
     values_to = "gfp_mean"
-  )
-
-zf_long <- zf_long %>%
+  ) %>%
   mutate(
     day = as.numeric(gsub("x|dpf_mean_gfp_469_525", "", day))
-  )
+  ) %>%
+  filter(!is.na(gfp_mean))
 ```
 
+```{r}
+long_saturated <- gfp_saturated %>%
+  pivot_longer(
+    cols = starts_with("x"),
+    names_to = "day",
+    values_to = "gfp_saturated"
+  ) %>%
+  mutate(
+    day = as.numeric(gsub("x|dpf_saturated_pixels_pct_gfp_469_525", "", day))
+  ) %>%
+  filter(!is.na(gfp_saturated))
+```
+
+```{r}
+mean_gfp_profile <- ggplot(
+    long_mean,
+    aes(
+        x = day,
+        y = gfp_mean,
+        color = factor(concentration_ug_l)
+    )
+) +
+    stat_summary(fun = mean, geom = "line", linewidth = 1) +
+    stat_summary(fun = mean, geom = "point", size = 3) +
+    stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2) +
+    
+    scale_color_brewer(palette = "Greens") +
+    
+    scale_x_continuous(breaks = 1:10) +
+  
+    labs(
+        color = "BPS Concentration (µg/L)",
+        x = "Days post fertilization (dpf)",
+        y = "Mean GFP intensity (A.U.)"
+    ) +
+    theme_bw()
+
+plot(mean_gfp_profile)
+```
+
+```{r}
+ggsave(
+  filename = "../Figures/mean_gfp.png",
+  plot = mean_gfp_profile,
+  width = 8,
+  height = 4,
+  dpi = 300
+)
+```
+
+```{r}
+saturated_gfp_profile <- ggplot(
+    long_saturated,
+    aes(
+        x = day,
+        y = gfp_saturated,
+        color = factor(concentration_ug_l)
+    )
+) +
+    stat_summary(fun = mean, geom = "line", linewidth = 1) +
+    stat_summary(fun = mean, geom = "point", size = 3) +
+    stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2) +
+    
+    scale_color_brewer(palette = "Greens") +
+    
+    scale_x_continuous(breaks = 1:10) +
+  
+    labs(
+        color = "BPS Concentration (µg/L)",
+        x = "Days post fertilization (dpf)",
+        y = "Saturated Pixels (%)"
+    ) +
+    theme_bw()
+
+plot(saturated_gfp_profile)
+```
+
+```{r}
+ggsave(
+  filename = "../Figures/saturated_gfp.png",
+  plot = saturated_gfp_profile,
+  width = 8,
+  height = 4,
+  dpi = 300
+)
+```
+
+```{r}
+heart_rate <- zf %>%
+  select(concentration_ug_l, heart_rate_bpm) %>%
+  filter(!is.na(heart_rate_bpm)) %>%
+  mutate(concentration_ug_l = factor(concentration_ug_l))
+```
+
+```{r}
+heart_plot<-ggplot(heart_rate, aes(x = concentration_ug_l, y = heart_rate_bpm)) +
+  
+  # mean points
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    size = 3,
+    color = "black"
+  ) +
+  
+  # SE error bars
+  stat_summary(
+    fun.data = mean_se,
+    geom = "errorbar",
+    width = 0.15,
+    color = "black"
+  ) +
+  
+  # raw data
+  geom_jitter(
+    width = 0.15,
+    alpha = 0.5,
+    size = 2
+  ) +
+  
+  labs(
+    x = "Concentration (µg/L)",
+    y = "Heart rate (bpm)"
+  ) +
+  
+  theme_bw()
+```
+
+```{r}
+ggsave(
+  filename = "../Figures/heart_rate.png",
+  plot = heart_plot,
+  width = 8,
+  height = 4,
+  dpi = 300
+)
+```
+
+```{r}
+hatched <- zf %>%
+  select(concentration_ug_l, hatched_dpf) %>%
+  mutate(concentration_ug_l = factor(concentration_ug_l))
+```
+
+```{r}
+hatched_plot<-ggplot(hatched, aes(x = concentration_ug_l, y = hatched_dpf)) +
+  geom_jitter(width = 0.15, height = 0.05, alpha = 0.6, size = 2) +
+  scale_y_continuous(breaks = c(2, 3, 4)) +
+  labs(
+    x = "Concentration (µg/L)",
+    y = "Day hatched (dpf)"
+  ) +
+  theme_classic()
+
+plot(hatched_plot)
+```
+
+```{r}
+ggsave(
+  filename = "../Figures/hatched.png",
+  plot = hatched_plot,
+  width = 8,
+  height = 4,
+  dpi = 300
+)
+```
