@@ -109,7 +109,7 @@ ggsave(
 )
 ```
 
-the following code isn't complete and needs 
+the following code isn't complete and needs the ZF_analysis file run before
 ```{r}
 heart_rate <- zf %>%
   select(concentration_ug_l, heart_rate_bpm) %>%
