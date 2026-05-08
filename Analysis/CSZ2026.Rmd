@@ -3,3 +3,102 @@ title: "CSZ2026"
 output: html_document
 ---
 
+---
+title: "ZF analysis"
+author: "Hayden Simm"
+date: "2026-04-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(purrr)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+library(dplyr)
+library(janitor)
+library(car)
+```
+
+```{r}
+zf <- read_csv("../Data/BPS_CELLCOUNT.csv")
+
+zf <- zf %>%
+  clean_names()
+
+str(zf)
+```
+
+Selecting only one row per sumed value
+```{r}
+df_sum <- zf %>%
+  group_by(plate, well, concentration_ug_l) %>%
+  summarise(
+    total_gfp = sum(total_gfp, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(total_gfp != 0)
+```
+
+ggplot of total gfp in thyroid follicles at 10
+```{r}
+gfp_cellcount_plot <- ggplot(
+    df_sum,
+    aes(
+        x = factor(concentration_ug_l),
+        y = log(total_gfp),
+        color = factor(concentration_ug_l)
+    )
+) +
+    
+    # raw datapoints
+    geom_jitter(
+        width = 0.15,
+        size = 2,
+        alpha = 0.7
+    ) +
+    
+    # mean points
+    stat_summary(
+        fun = mean,
+        geom = "point",
+        size = 3,
+        color = "black"
+    ) +
+    
+    # mean ± SE
+    stat_summary(
+        fun.data = mean_se,
+        geom = "errorbar",
+        width = 0.2,
+        color = "black"
+    ) +
+    
+    scale_color_brewer(palette = "Greens") +
+    
+    labs(
+        x = "BPS Concentration (µg/L)",
+        y = "log(Total GFP intensity (A.U.))",
+        color = "BPS Concentration (µg/L)"
+    ) +
+    
+    theme_bw()
+
+plot(gfp_cellcount_plot)
+```
+
+```{r}
+ggsave(
+  filename = "../Figures/cellcount_gfp.png",
+  plot = gfp_cellcount_plot,
+  width = 8,
+  height = 4,
+  dpi = 300
+)
+```
