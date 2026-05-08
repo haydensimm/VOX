@@ -196,7 +196,7 @@ hatched_plot <- ggplot(
   scale_fill_brewer(palette = "Greens") +
   
   labs(
-    x = "Concentration (µg/L)",
+    x = "BPS Concentration (µg/L)",
     y = "Day hatched (dpf)",
     fill = "BPS Concentration (µg/L)"
   ) +
