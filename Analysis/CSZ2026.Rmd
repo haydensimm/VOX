@@ -46,30 +46,36 @@ df_sum <- zf %>%
   filter(total_gfp != 0)
 ```
 
-ggplot of total gfp in thyroid follicles at 10
+ggplot of total GFP using cell count at 10 dpf
 ```{r}
-gfp_cellcount_plot <- ggplot(
+cellcount <- ggplot(
     df_sum,
     aes(
         x = factor(concentration_ug_l),
         y = log(total_gfp),
-        color = factor(concentration_ug_l)
+        fill = factor(concentration_ug_l)
     )
 ) +
     
     # raw datapoints
     geom_jitter(
+        shape = 21,
+        color = "black",
+        size = 3,
+        stroke = 0.6,
         width = 0.15,
-        size = 2,
-        alpha = 0.7
+        alpha = 0.8
     ) +
     
     # mean points
     stat_summary(
         fun = mean,
         geom = "point",
+        shape = 21,
+        fill = "black",
+        color = "black",
         size = 3,
-        color = "black"
+        stroke = 1
     ) +
     
     # mean ± SE
@@ -80,23 +86,23 @@ gfp_cellcount_plot <- ggplot(
         color = "black"
     ) +
     
-    scale_color_brewer(palette = "Greens") +
+    scale_fill_brewer(palette = "Greens") +
     
     labs(
         x = "BPS Concentration (µg/L)",
-        y = "log(Total GFP intensity (A.U.))",
-        color = "BPS Concentration (µg/L)"
+        y = "log (Total GFP intensity (A.U.))",
+        fill = "BPS Concentration (µg/L)"
     ) +
     
     theme_bw()
 
-plot(gfp_cellcount_plot)
+plot(cellcount)
 ```
 
 ```{r}
 ggsave(
-  filename = "../Figures/cellcount_gfp.png",
-  plot = gfp_cellcount_plot,
+  filename = "../Figures/cellcount_plot.png",
+  plot = cellcount,
   width = 8,
   height = 4,
   dpi = 300
