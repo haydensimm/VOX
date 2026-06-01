@@ -162,6 +162,24 @@ heart_rate <- zf %>%
 ```
 
 ```{r}
+heart_model_data <- zf %>%
+  select(concentration_ug_l, heart_rate_bpm) %>%
+  filter(!is.na(heart_rate_bpm))
+```
+
+heart rate linear model
+```{r}
+heart_model<-lm(heart_rate_bpm ~ concentration_ug_l, data = heart_model_data)
+summary(heart_model)
+```
+
+heart rate ANOVA
+```{r}
+heart_anova<-aov(heart_rate_bpm ~ concentration_ug_l, data = heart_rate)
+summary(heart_anova)
+```
+
+```{r}
 heart_plot<-ggplot(heart_rate, aes(x = concentration_ug_l, y = heart_rate_bpm)) +
   
   # mean points
