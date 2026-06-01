@@ -43,7 +43,14 @@ df_sum <- zf %>%
     total_gfp = sum(total_gfp, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  filter(total_gfp != 0)
+  filter(total_gfp != 0) %>%
+  mutate(log_total_gfp = log(total_gfp))
+```
+
+gfp ANOVA
+```{r}
+gfp_anova<-aov(log_total_gfp ~ concentration_ug_l, data = df_sum)
+summary(gfp_anova)
 ```
 
 ggplot of total GFP using cell count at 10 dpf
@@ -170,6 +177,8 @@ ggsave(
   dpi = 300
 )
 ```
+
+
 
 ```{r}
 hatched_plot <- ggplot(

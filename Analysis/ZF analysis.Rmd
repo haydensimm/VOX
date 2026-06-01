@@ -180,6 +180,18 @@ summary(heart_anova)
 ```
 
 ```{r}
+hatch_data <- zf %>% 
+  select(concentration_ug_l, hatched_dpf) %>%
+  filter(!is.na(hatched_dpf))
+```
+
+hatch ANOVA
+```{r}
+hatch_anova<-aov(hatched_dpf ~ concentration_ug_l, data = hatch_data)
+summary(hatch_anova)
+```
+
+```{r}
 heart_plot<-ggplot(heart_rate, aes(x = concentration_ug_l, y = heart_rate_bpm)) +
   
   # mean points
