@@ -117,9 +117,9 @@ anova(hatch_model)
 
 pair-wise post hoc
 ```{r}
-emm <- emmeans(hatch_model, ~ concentration_ug_l | dpf)
+emm_hatch <- emmeans(hatch_model, ~ concentration_ug_l | dpf)
 
-pairs(emm, adjust = "tukey")
+pairs(emm_hatch, adjust = "tukey")
 ```
 
 ```{r}
@@ -287,9 +287,9 @@ anova(mortality_model)
 
 pair-wise post hoc
 ```{r}
-emm <- emmeans(mortality_model, ~ concentration_ug_l | dpf)
+emm_mortality <- emmeans(mortality_model, ~ concentration_ug_l | dpf)
 
-pairs(emm, adjust = "tukey")
+pairs(emm_mortality, adjust = "tukey")
 ```
 
 ```{r}
