@@ -266,7 +266,7 @@ mortality_long <- mortality_data %>%
   mutate(
     dpf = factor(
       gsub("_dpf_percent_survival", "", gsub("x", "", dpf)),
-      levels = 2:10
+      levels = 1:10
     ),
     concentration_ug_l = factor(concentration_ug_l),
     plate_number = factor(plate_number)
