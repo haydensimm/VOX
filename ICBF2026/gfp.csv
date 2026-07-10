@@ -1,4 +1,4 @@
-Image,parental genotype,generation,dob,exposure,concentration (g/L),day post fettilization (dpf),ThyroidMean,ThyroidArea,ThyroidIntDen,BackgroundMean,BackgroundArea,CTCF
+Image,parental genotype,generation,dob,exposure,concentration (g/L),dfp,ThyroidMean,ThyroidArea,ThyroidIntDen,BackgroundMean,BackgroundArea,CTCF
 0.0001gL_5dpf_fish4.tif,TRAR11xAB,F2,2026-05-19,PTU,0.0001,5,9760.4562,33300,325023190,2920.2108,7656,227780170
 0.0001gL_5dpf_fish5.tif,TRAR11xAB,F2,2026-05-19,PTU,0.0001,5,14308.6626,8326,119133925,3455.2943,12285,90365144.3
 0.0001gL_6dpf_fish10.tif,TRAR11xAB,F2,2026-05-19,PTU,0.0001,6,20972.149,16896,354345429,4894.7056,8268,271644483
