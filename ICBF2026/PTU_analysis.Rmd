@@ -105,9 +105,8 @@ hatch_long <- hatch_data %>%
 
 hatch model
 ```{r}
-hatch_model <- lmer(
-  percent_hatched ~ concentration_ug_l * dpf +
-    (1 | plate_number),
+hatch_model <- lm(
+  percent_hatched ~ concentration_ug_l * dpf + plate_number,
   data = hatch_long
 )
 
@@ -275,9 +274,8 @@ mortality_long <- mortality_data %>%
 
 mortality model
 ```{r}
-mortality_model <- lmer(
-  percent_survival ~ concentration_ug_l * dpf +
-    (1 | plate_number),
+mortality_model <- lm(
+  percent_survival ~ concentration_ug_l * dpf + plate_number,
   data = mortality_long
 )
 
@@ -347,4 +345,104 @@ ggsave(
   height = 4,
   dpi = 300
 )
+```
+
+gfp data
+```{r}
+gfp_reduced <- read_csv("gfp_reduced.csv")
+
+gfp_reduced <- gfp_reduced %>%
+  clean_names()
+
+str(gfp_reduced)
+```
+
+```{r}
+gfp_reduced <- gfp_reduced %>%
+  mutate(concentration_g_l = factor(concentration_g_l))
+
+str(gfp_reduced)
+```
+
+```{r}
+log_gfp_reduced <- gfp_reduced %>%
+  filter(ctcf >= 0) %>%
+  mutate(log_ctcf = log(ctcf))
+  # if you want to set -neg values as 0 mutate(log_ctcf = ifelse(ctcf <= 0, 0, log(ctcf)))
+```
+
+```{r}
+gfp_plot <- ggplot(
+  log_gfp_reduced,
+  aes(
+    x = dpf,
+    y = log_ctcf,
+    colour = concentration_g_l,
+    group = concentration_g_l
+  )
+) +
+
+  stat_summary(
+    fun = mean,
+    geom = "line",
+    linewidth = 1.2
+  ) +
+
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    size = 3
+  ) +
+
+  stat_summary(
+    fun.data = mean_se,
+    geom = "errorbar",
+    width = 0.15
+  ) +
+
+  scale_color_manual(
+    values = c(
+      "0"      = "#00441B",
+      "1e-04"  = "#238B45",
+      "0.001"  = "#41AB5D",
+      "0.01"   = "#74C476",
+      "0.1"    = "#A1D99B"
+    ),
+    name = expression("PTU (g/L)")
+  ) +
+
+  labs(
+    x = "Days post fertilization",
+    y = "log Corrected total cell fluorescenece"
+  ) +
+  theme_bw()
+```
+
+```{r}
+ggsave(
+  filename = "ICBF_figures/gfp.png",
+  plot = gfp_plot,
+  width = 8,
+  height = 4,
+  dpi = 300
+)
+```
+
+gfp model
+```{r}
+gfp_model <- lm(
+  log_ctcf ~ concentration_g_l * dpf,
+  data = log_gfp_reduced
+)
+
+summary(gfp_model)
+anova(gfp_model)
+```
+
+
+pair-wise post hoc
+```{r}
+emm_gfp <- emmeans(gfp_model, ~ concentration_g_l | dpf)
+
+pairs(emm_gfp, adjust = "tukey")
 ```
